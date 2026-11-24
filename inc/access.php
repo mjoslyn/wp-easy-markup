@@ -3,9 +3,10 @@
  * Who may comment on a page.
  *
  * Staff: anyone who can edit the page (editors and admins). They comment as themselves.
- * Guests: anyone who opened a review link for the page. Opening /any-page/?markup-link=<token> checks
- * the link (not revoked, not expired, the page published), sets a cookie for that page only, and sends
- * them to the page with comment mode on. The cookie is signed over the link's ID and token, and the
+ * Guests: anyone who opened a review link. Opening /any-page/?markup-link=<token> checks the link (not
+ * revoked, not expired, the page published), sets a cookie, and sends them to the page with comment
+ * mode on. A page link works on its page only. A site link (page 0, made by editors and admins) works
+ * on every published page of the site. The cookie is signed over the link's ID and token, and the
  * link is read again on every comment, so turning a link off ends its guests' access at once.
  *
  * @package EasyMarkup
@@ -14,6 +15,30 @@
 defined( 'ABSPATH' ) || exit;
 
 const EASY_MARKUP_COOKIE_DAYS = 30;
+
+/** Who may make and turn off site links (review links for every page). */
+const EASY_MARKUP_SITE_CAP = 'edit_others_pages';
+
+/**
+ * Whether a link works on every page of the site.
+ *
+ * @param object $link Link row.
+ * @return bool
+ */
+function easy_markup_link_is_site( object $link ): bool {
+	return 0 === (int) $link->post_id;
+}
+
+/**
+ * Whether a page can be commented on with a site link: published, of a type with public pages.
+ *
+ * @param int $post_id Page ID.
+ * @return bool
+ */
+function easy_markup_open_to_site_links( int $post_id ): bool {
+	$type = get_post_type( $post_id );
+	return $type && 'publish' === get_post_status( $post_id ) && is_post_type_viewable( $type );
+}
 
 /**
  * Whether the current user is staff for a page (can edit it).
@@ -67,17 +92,17 @@ function easy_markup_link_live( ?object $link ): bool {
 	if ( $link->expires_at && strtotime( $link->expires_at . ' UTC' ) < time() ) {
 		return false;
 	}
-	return 'publish' === get_post_status( (int) $link->post_id );
+	return easy_markup_link_is_site( $link ) || 'publish' === get_post_status( (int) $link->post_id );
 }
 
 /**
- * The guest cookie's name for a page.
+ * The guest cookie's name for a page's links (0 = site links).
  *
- * @param int $post_id Page ID.
+ * @param int $post_id Page ID, or 0 for site links.
  * @return string
  */
 function easy_markup_cookie_name( int $post_id ): string {
-	return 'easy_markup_' . $post_id;
+	return 0 === $post_id ? 'easy_markup_site' : 'easy_markup_' . $post_id;
 }
 
 /**
@@ -97,6 +122,20 @@ function easy_markup_sign( object $link ): string {
  * @return object|null
  */
 function easy_markup_guest_link( int $post_id ): ?object {
+	$link = easy_markup_cookie_link( $post_id );
+	if ( ! $link && easy_markup_open_to_site_links( $post_id ) ) {
+		$link = easy_markup_cookie_link( 0 );
+	}
+	return $link;
+}
+
+/**
+ * The live link in this browser's cookie for a page's links (0 = site links), or null.
+ *
+ * @param int $post_id Page ID, or 0 for site links.
+ * @return object|null
+ */
+function easy_markup_cookie_link( int $post_id ): ?object {
 	$name = easy_markup_cookie_name( $post_id );
 	$raw  = isset( $_COOKIE[ $name ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $name ] ) ) : '';
 	if ( ! preg_match( '/^(\d+)\.([a-f0-9]{64})$/', $raw, $m ) ) {
@@ -155,7 +194,14 @@ add_action(
 			)
 		);
 		nocache_headers();
-		wp_safe_redirect( add_query_arg( 'markup', '1', get_permalink( (int) $link->post_id ) ) );
+		if ( easy_markup_link_is_site( $link ) ) {
+			// A site link lands on the page it was opened on (the home page if that isn't a page).
+			$id   = is_singular() ? (int) get_queried_object_id() : 0;
+			$dest = $id && easy_markup_open_to_site_links( $id ) ? get_permalink( $id ) : home_url( '/' );
+		} else {
+			$dest = get_permalink( (int) $link->post_id );
+		}
+		wp_safe_redirect( add_query_arg( 'markup', '1', $dest ) );
 		exit;
 	},
 	1
@@ -200,15 +246,16 @@ function easy_markup_revoke_link( int $id ): bool {
 }
 
 /**
- * A page's review links, newest first.
+ * Review links, newest first: a page's own, with the site links if asked.
  *
- * @param int $post_id Page ID.
+ * @param int  $post_id    Page ID (0 = every page's links).
+ * @param bool $with_site  Include site links.
  * @return object[]
  */
-function easy_markup_links_of( int $post_id ): array {
+function easy_markup_links_of( int $post_id, bool $with_site = false ): array {
 	global $wpdb;
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin's own table.
-	$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE post_id = %d ORDER BY id DESC', easy_markup_table( 'links' ), $post_id ) );
+	$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE ( %d = 0 OR post_id = %d OR ( %d = 1 AND post_id = 0 ) ) ORDER BY id DESC', easy_markup_table( 'links' ), $post_id, $post_id, $with_site ? 1 : 0 ) );
 	return $rows ? $rows : array();
 }
 
@@ -225,7 +272,9 @@ function easy_markup_link_out( object $l ): array {
 	return array(
 		'id'       => (int) $l->id,
 		'label'    => (string) $l->label,
-		'url'      => add_query_arg( 'markup-link', $l->token, get_permalink( (int) $l->post_id ) ),
+		'site'     => easy_markup_link_is_site( $l ),
+		'page'     => easy_markup_link_is_site( $l ) ? '' : get_the_title( (int) $l->post_id ),
+		'url'      => add_query_arg( 'markup-link', $l->token, easy_markup_link_is_site( $l ) ? home_url( '/' ) : get_permalink( (int) $l->post_id ) ),
 		'live'     => easy_markup_link_live( $l ),
 		'created'  => easy_markup_when( $l->created_at ),
 		'expires'  => $l->expires_at ? easy_markup_when( $l->expires_at ) : '',

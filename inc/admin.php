@@ -39,6 +39,31 @@ add_action(
 	}
 );
 
+add_action(
+	'admin_post_easy_markup_link',
+	function () {
+		check_admin_referer( 'easy_markup_link' );
+		$do = isset( $_POST['do'] ) ? sanitize_key( wp_unslash( $_POST['do'] ) ) : '';
+		if ( 'create' === $do ) {
+			if ( ! current_user_can( EASY_MARKUP_SITE_CAP ) ) {
+				wp_die( esc_html__( 'You can\'t make site links.', 'easy-markup' ), 403 );
+			}
+			$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : '';
+			$days  = isset( $_POST['days'] ) ? absint( $_POST['days'] ) : 30;
+			easy_markup_create_link( 0, $label, min( 365, $days ) );
+		} elseif ( 'revoke' === $do ) {
+			$link = easy_markup_get_link( isset( $_POST['link'] ) ? absint( $_POST['link'] ) : 0 );
+			$may  = $link && ( easy_markup_link_is_site( $link ) ? current_user_can( EASY_MARKUP_SITE_CAP ) : current_user_can( 'edit_post', (int) $link->post_id ) );
+			if ( ! $may ) {
+				wp_die( esc_html__( 'You can\'t turn this link off.', 'easy-markup' ), 403 );
+			}
+			easy_markup_revoke_link( (int) $link->id );
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=easy-markup#review-links' ) );
+		exit;
+	}
+);
+
 /**
  * The Markup admin page.
  *
@@ -108,6 +133,77 @@ function easy_markup_admin_page(): void {
 								<button class="button button-small" name="do" value="<?php echo 'open' === $r->status ? 'resolve' : 'reopen'; ?>"><?php echo 'open' === $r->status ? 'Resolve' : 'Reopen'; ?></button>
 								<button class="button button-small button-link-delete" name="do" value="delete" onclick="return confirm('Delete this comment for good? To keep it but mark it done, use Resolve.');">Delete</button>
 							</form>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+
+		<h2 id="review-links"><?php esc_html_e( 'Review links', 'easy-markup' ); ?></h2>
+		<p><?php esc_html_e( 'Anyone with a review link can comment after giving their name. A page link works on its page; a whole-site link works on every published page. Make page links in the editor\'s Comments sidebar.', 'easy-markup' ); ?></p>
+		<?php if ( current_user_can( EASY_MARKUP_SITE_CAP ) ) : ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:12px 0">
+				<input type="hidden" name="action" value="easy_markup_link">
+				<input type="hidden" name="do" value="create">
+				<?php wp_nonce_field( 'easy_markup_link' ); ?>
+				<label><?php esc_html_e( 'Who it\'s for (optional)', 'easy-markup' ); ?> <input type="text" name="label" class="regular-text"></label>
+				<label><?php esc_html_e( 'Works for', 'easy-markup' ); ?>
+					<select name="days">
+						<option value="7"><?php esc_html_e( '7 days', 'easy-markup' ); ?></option>
+						<option value="30" selected><?php esc_html_e( '30 days', 'easy-markup' ); ?></option>
+						<option value="90"><?php esc_html_e( '90 days', 'easy-markup' ); ?></option>
+						<option value="0"><?php esc_html_e( 'Until turned off', 'easy-markup' ); ?></option>
+					</select>
+				</label>
+				<button class="button button-primary"><?php esc_html_e( 'Make a whole-site link', 'easy-markup' ); ?></button>
+			</form>
+		<?php endif; ?>
+		<?php
+		$links = array_values(
+			array_filter(
+				easy_markup_links_of( 0 ),
+				fn( $l ) => easy_markup_link_is_site( $l ) ? current_user_can( EASY_MARKUP_SITE_CAP ) : current_user_can( 'edit_post', (int) $l->post_id )
+			)
+		);
+		?>
+		<?php if ( ! $links ) : ?>
+			<p><?php esc_html_e( 'No review links yet.', 'easy-markup' ); ?></p>
+		<?php else : ?>
+			<table class="wp-list-table widefat fixed striped">
+				<thead><tr><th><?php esc_html_e( 'For', 'easy-markup' ); ?></th><th><?php esc_html_e( 'Works on', 'easy-markup' ); ?></th><th style="width:30%"><?php esc_html_e( 'Link', 'easy-markup' ); ?></th><th><?php esc_html_e( 'Status', 'easy-markup' ); ?></th><th style="width:9%"><?php esc_html_e( 'Comments', 'easy-markup' ); ?></th><th style="width:10%"></th></tr></thead>
+				<tbody>
+				<?php foreach ( $links as $l ) : ?>
+					<?php $lo = easy_markup_link_out( $l ); ?>
+					<tr<?php echo $lo['live'] ? '' : ' style="opacity:.6"'; ?>>
+						<td><?php echo esc_html( '' !== $lo['label'] ? $lo['label'] : __( 'Review link', 'easy-markup' ) ); ?></td>
+						<td><?php echo $lo['site'] ? '<strong>' . esc_html__( 'Whole site', 'easy-markup' ) . '</strong>' : esc_html( $lo['page'] ); ?></td>
+						<td>
+						<?php
+						if ( $lo['live'] ) :
+							?>
+							<input type="text" readonly class="large-text code" value="<?php echo esc_attr( $lo['url'] ); ?>" onclick="this.select()"><?php endif; ?></td>
+						<td>
+							<?php
+							if ( $lo['live'] ) {
+								/* translators: 1: when made, 2: when it stops working. */
+								echo esc_html( $lo['expires'] ? sprintf( __( 'Made %1$s, works until %2$s', 'easy-markup' ), $lo['created'], $lo['expires'] ) : sprintf( __( 'Made %s, no expiry', 'easy-markup' ), $lo['created'] ) );
+							} else {
+								echo esc_html( $lo['revoked'] ? __( 'Turned off ', 'easy-markup' ) . $lo['revoked'] : __( 'Expired ', 'easy-markup' ) . $lo['expires'] );
+							}
+							?>
+						</td>
+						<td><?php echo (int) $lo['comments']; ?></td>
+						<td>
+							<?php if ( $lo['live'] ) : ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+									<input type="hidden" name="action" value="easy_markup_link">
+									<input type="hidden" name="do" value="revoke">
+									<input type="hidden" name="link" value="<?php echo (int) $l->id; ?>">
+									<?php wp_nonce_field( 'easy_markup_link' ); ?>
+									<button class="button button-small button-link-delete"><?php esc_html_e( 'Turn off', 'easy-markup' ); ?></button>
+								</form>
+							<?php endif; ?>
 						</td>
 					</tr>
 				<?php endforeach; ?>

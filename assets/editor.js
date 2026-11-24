@@ -53,6 +53,7 @@
     const [error, setError] = useState('');
     const [linkLabel, setLinkLabel] = useState('');
     const [linkDays, setLinkDays] = useState('30');
+    const [linkSite, setLinkSite] = useState(false);
     const [copied, setCopied] = useState(0);
 
     const flat = flatten(blocks || []);
@@ -196,7 +197,7 @@
         h(
           PanelBody,
           { title: 'Review links', initialOpen: false },
-          h('p', { style: { fontSize: '12px', color: '#50575e' } }, 'Anyone with a review link can comment on this page after giving their name. Turn a link off to stop it working.'),
+          h('p', { style: { fontSize: '12px', color: '#50575e' } }, 'Anyone with a review link can comment after giving their name: on this page, or on every page with a whole-site link. Turn a link off to stop it working.'),
           status !== 'publish'
             ? h(Notice, { status: 'info', isDismissible: false }, 'Publish the page to make a review link.')
             : h(
@@ -204,7 +205,7 @@
                 {
                   onSubmit: (e) => {
                     e.preventDefault();
-                    act(() => apiFetch({ path: '/easy-markup/v1/links', method: 'POST', data: { post: postId, label: linkLabel, days: parseInt(linkDays, 10) || 0 } })).then((ok) => ok && setLinkLabel(''));
+                    act(() => apiFetch({ path: '/easy-markup/v1/links', method: 'POST', data: { post: postId, label: linkLabel, days: parseInt(linkDays, 10) || 0, site: linkSite } })).then((ok) => ok && (setLinkLabel(''), setLinkSite(false)));
                   },
                 },
                 h(TextControl, { label: 'Who it’s for (optional)', value: linkLabel, onChange: setLinkLabel, __nextHasNoMarginBottom: true }),
@@ -220,13 +221,14 @@
                   onChange: setLinkDays,
                   __nextHasNoMarginBottom: true,
                 }),
-                h(Button, { variant: 'secondary', type: 'submit', disabled: busy, style: { marginTop: '8px' } }, 'Make a review link'),
+                cfg.canSite && h(CheckboxControl, { label: 'Works on every page of the site', checked: linkSite, onChange: setLinkSite, __nextHasNoMarginBottom: true }),
+                h(Button, { variant: 'secondary', type: 'submit', disabled: busy, style: { marginTop: '8px' } }, linkSite ? 'Make a whole-site link' : 'Make a review link'),
               ),
           (links || []).map((l) =>
             h(
               'div',
               { key: l.id, style: { borderTop: '1px solid #e0e0e0', padding: '8px 0', fontSize: '12px', opacity: l.live ? 1 : 0.6 } },
-              h('div', null, h('strong', null, l.label || 'Review link'), ` (${l.comments} ${l.comments === 1 ? 'comment' : 'comments'})`),
+              h('div', null, h('strong', null, l.label || 'Review link'), l.site ? ' · whole site' : '', ` (${l.comments} ${l.comments === 1 ? 'comment' : 'comments'})`),
               h('div', { style: { color: '#50575e' } }, l.live ? `Made ${l.created}${l.expires ? `, works until ${l.expires}` : ''}` : l.revoked ? `Turned off ${l.revoked}` : `Expired ${l.expires}`),
               l.live &&
                 h(

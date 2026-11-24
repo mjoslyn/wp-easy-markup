@@ -28,8 +28,9 @@ add_action(
 			'easy-markup-editor',
 			'easyMarkupEditor',
 			array(
-				'people' => easy_markup_people_out(),
-				'labels' => easy_markup_type_labels(),
+				'people'  => easy_markup_people_out(),
+				'canSite' => current_user_can( EASY_MARKUP_SITE_CAP ),
+				'labels'  => easy_markup_type_labels(),
 			)
 		);
 	}
