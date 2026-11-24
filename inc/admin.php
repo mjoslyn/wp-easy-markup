@@ -15,6 +15,8 @@ add_action(
 		$open  = easy_markup_open_count();
 		$title = 'Markup' . ( $open ? ' <span class="awaiting-mod">' . (int) $open . '</span>' : '' );
 		add_menu_page( 'Markup', $title, 'edit_pages', 'easy-markup', 'easy_markup_admin_page', 'dashicons-format-chat', 26 );
+		// First submenu item names the list itself; Settings (inc/settings.php) follows it.
+		add_submenu_page( 'easy-markup', 'Markup', __( 'Comments', 'easy-markup' ), 'edit_pages', 'easy-markup', 'easy_markup_admin_page' );
 	}
 );
 

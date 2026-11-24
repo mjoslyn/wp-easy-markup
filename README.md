@@ -14,9 +14,9 @@ Comment on a WordPress page, or on any block in it, right on the page. Editors a
 - **Comment button on every block's toolbar** (block editor): opens the Comments sidebar on that block with the cursor in the comment box.
 - **Markup** (admin menu, with the number of open comments): every comment, filtered by page and by open or resolved, with View on page (scrolls to the block, outlines it and shows the comment) and Edit page. Its Review links section lists every link (page and whole site) with copy and Turn off, and makes whole-site links.
 - **Admin bar** on a page: Markup (open count), Comment on this page, See comments.
-- **Guest comment emails** (Settings > Easy Markup): turn on an email for every comment left through a review link and list who gets it (up to 20 addresses). Staff comments don't send these.
-- **Page snapshots** (Settings > Easy Markup, on by default): each comment left on the page saves a picture of the whole page with the commented block framed, captured in the browser with html2canvas. Stored under `uploads/easy-markup-snapshots` with random names, re-encoded as JPEG (max 1600px wide), and served only to users who can edit the page. Deleted with the comment.
-- **Colors** (Settings > Easy Markup): the accent (outlines, the active Comment button, quote bars, focus rings), the button color and the button text color, with WordPress's color picker. Clear a color to go back to the default. Applied as CSS custom properties (`--em-accent`, `--em-button`, `--em-button-text`), so a theme can also set them.
+- **Guest comment emails** (Markup > Settings): turn on an email for every comment left through a review link and list who gets it (up to 20 addresses). Staff comments don't send these.
+- **Page snapshots** (Markup > Settings, on by default): each comment left on the page saves a picture of the whole page with the commented block framed, captured in the browser with html2canvas. Stored under `uploads/easy-markup-snapshots` with random names, re-encoded as JPEG (max 1600px wide), and served only to users who can edit the page. Deleted with the comment.
+- **Colors** (Markup > Settings): the accent (outlines, the active Comment button, quote bars, focus rings), the button color and the button text color, with WordPress's color picker. Clear a color to go back to the default. Applied as CSS custom properties (`--em-accent`, `--em-button`, `--em-button-text`), so a theme can also set them.
 
 ### Which block a comment is on
 

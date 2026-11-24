@@ -1,6 +1,6 @@
 <?php
 /**
- * Settings > Easy Markup: the colors of comment mode on the page.
+ * Markup > Settings: the colors of comment mode on the page.
  *
  * Accent: the hover and selected outlines, the active Comment button, quote bars and focus rings.
  * Button: the Comment button's background. Button text: its text. Applied as CSS custom properties
@@ -94,35 +94,61 @@ add_action(
 	}
 );
 
+// Settings sit under the Markup menu (inc/admin.php), after Comments. Admins only.
 add_action(
 	'admin_menu',
 	function () {
-		add_options_page(
-			__( 'Easy Markup', 'easy-markup' ),
-			__( 'Easy Markup', 'easy-markup' ),
+		$hook = add_submenu_page(
+			'easy-markup',
+			__( 'Easy Markup settings', 'easy-markup' ),
+			__( 'Settings', 'easy-markup' ),
 			'manage_options',
 			'easy-markup-settings',
 			'easy_markup_settings_page'
 		);
+		if ( $hook ) {
+			add_action(
+				'admin_enqueue_scripts',
+				function ( $current ) use ( $hook ) {
+					if ( $hook !== $current ) {
+						return;
+					}
+					wp_enqueue_style( 'wp-color-picker' );
+					wp_enqueue_script( 'wp-color-picker' );
+					wp_add_inline_script( 'wp-color-picker', 'jQuery(function($){$(".easy-markup-color").wpColorPicker();});' );
+				}
+			);
+		}
+	},
+	20
+);
+
+// The page used to be under Settings; send old links and bookmarks to the new place.
+add_action(
+	'admin_init',
+	function () {
+		global $pagenow;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only reads which page was asked for.
+		if ( 'options-general.php' === $pagenow && isset( $_GET['page'] ) && 'easy-markup-settings' === $_GET['page'] ) {
+			wp_safe_redirect( easy_markup_settings_url() );
+			exit;
+		}
 	}
 );
 
-add_action(
-	'admin_enqueue_scripts',
-	function ( $hook ) {
-		if ( 'settings_page_easy-markup-settings' !== $hook ) {
-			return;
-		}
-		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_script( 'wp-color-picker' );
-		wp_add_inline_script( 'wp-color-picker', 'jQuery(function($){$(".easy-markup-color").wpColorPicker();});' );
-	}
-);
+/**
+ * The settings page address.
+ *
+ * @return string
+ */
+function easy_markup_settings_url(): string {
+	return admin_url( 'admin.php?page=easy-markup-settings' );
+}
 
 add_filter(
 	'plugin_action_links_' . plugin_basename( EASY_MARKUP_FILE ),
 	function ( $links ) {
-		array_unshift( $links, '<a href="' . esc_url( admin_url( 'options-general.php?page=easy-markup-settings' ) ) . '">' . esc_html__( 'Settings', 'easy-markup' ) . '</a>' );
+		array_unshift( $links, '<a href="' . esc_url( easy_markup_settings_url() ) . '">' . esc_html__( 'Settings', 'easy-markup' ) . '</a>' );
 		return $links;
 	}
 );
@@ -141,7 +167,8 @@ function easy_markup_settings_page(): void {
 	);
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Easy Markup', 'easy-markup' ); ?></h1>
+		<h1><?php esc_html_e( 'Easy Markup settings', 'easy-markup' ); ?></h1>
+		<?php settings_errors(); // WordPress prints these itself only on screens under Settings. ?>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'easy_markup' ); ?>
 			<h2><?php esc_html_e( 'Colors', 'easy-markup' ); ?></h2>

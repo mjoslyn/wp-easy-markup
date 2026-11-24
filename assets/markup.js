@@ -28,7 +28,7 @@
     return n;
   };
 
-  // Page snapshots (Settings > Easy Markup): html2canvas loads the first time a comment box opens.
+  // Page snapshots (Markup > Settings): html2canvas loads the first time a comment box opens.
   let h2cLoading = null;
   const loadH2C = () => {
     if (window.html2canvas) return Promise.resolve(window.html2canvas);

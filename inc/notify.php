@@ -1,6 +1,6 @@
 <?php
 /**
- * Emails for guest comments (Settings > Easy Markup > Guest comment emails).
+ * Emails for guest comments (Markup > Settings > Guest comment emails).
  *
  * When it's on, every comment left through a review link emails the addresses in the list: the page,
  * the block and its first words, the comment, the guest's name, the review link they used, and links

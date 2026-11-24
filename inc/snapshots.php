@@ -10,7 +10,7 @@
  * random name and is never linked directly: staff view it through admin-post.php, which checks they
  * can edit the comment's page. Deleting a comment deletes its snapshot.
  *
- * Settings > Easy Markup turns snapshots off (they are on by default).
+ * Markup > Settings turns snapshots off (they are on by default).
  *
  * @package EasyMarkup
  */
