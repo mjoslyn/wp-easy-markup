@@ -2,7 +2,8 @@
 /**
  * The block editor's Comments sidebar (assets/editor.js): the page's comments, open ones first, with
  * Show (selects the block), Resolve, Reopen and Delete; a box to comment on the selected block or the
- * whole page; and the page's review links (make, copy, turn off).
+ * whole page (a choice switches between them); and the page's review links (make, copy, turn off).
+ * Every block's toolbar also gets a Comment button that opens the sidebar on that block.
  *
  * @package EasyMarkup
  */
@@ -19,7 +20,7 @@ add_action(
 		wp_enqueue_script(
 			'easy-markup-editor',
 			EASY_MARKUP_URL . 'assets/editor.js',
-			array( 'wp-plugins', 'wp-editor', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch', 'wp-block-editor', 'wp-core-data', 'wp-url' ),
+			array( 'wp-plugins', 'wp-editor', 'wp-element', 'wp-components', 'wp-data', 'wp-api-fetch', 'wp-block-editor', 'wp-core-data', 'wp-url', 'wp-hooks', 'wp-compose' ),
 			EASY_MARKUP_VERSION,
 			true
 		);

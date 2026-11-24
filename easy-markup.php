@@ -3,7 +3,7 @@
  * Plugin Name: Easy Markup
  * Plugin URI: https://github.com/mjoslyn/wp-easy-markup
  * Description: Comment on a page or on any of its blocks, right on the page. Editors and admins comment as themselves; guests comment through a review link. Comments are listed in the block editor's Comments sidebar and under Markup.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * Author: mjoslyn
@@ -28,7 +28,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const EASY_MARKUP_VERSION    = '1.1.0';
+const EASY_MARKUP_VERSION    = '1.2.0';
 const EASY_MARKUP_DB_VERSION = '1';
 define( 'EASY_MARKUP_FILE', __FILE__ );
 define( 'EASY_MARKUP_URL', plugin_dir_url( __FILE__ ) );

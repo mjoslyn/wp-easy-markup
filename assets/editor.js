@@ -6,7 +6,12 @@
   const { registerPlugin } = wp.plugins;
   const { PluginSidebar, PluginSidebarMoreMenuItem } = wp.editor;
   const { createElement: h, Fragment, useState, useEffect } = wp.element;
-  const { PanelBody, Button, TextareaControl, TextControl, SelectControl, CheckboxControl, Notice, Spinner } = wp.components;
+  const { PanelBody, Button, TextareaControl, TextControl, SelectControl, CheckboxControl, RadioControl, Notice, Spinner, ToolbarGroup, ToolbarButton } = wp.components;
+  const { BlockControls } = wp.blockEditor;
+  const { addFilter } = wp.hooks;
+  const { createHigherOrderComponent } = wp.compose;
+  const SIDEBAR = 'easy-markup/easy-markup';
+  const COMPOSE_EVENT = 'easy-markup:compose';
   const { useSelect, useDispatch } = wp.data;
   const apiFetch = wp.apiFetch;
   const cfg = window.easyMarkupEditor || { people: [], labels: {} };
@@ -25,7 +30,8 @@
     const a = b.attributes || {};
     const raw = [a.content, a.value, a.text, a.citation, a.caption, a.alt].map((v) => (v == null ? '' : String(v))).join(' ');
     const div = document.createElement('div');
-    div.innerHTML = raw;
+    // Line breaks and block tags become spaces, so words on either side don't run together.
+    div.innerHTML = raw.replace(/<br\s*\/?>|<\/(p|li|h\d|div)>/gi, ' ');
     return (div.textContent || '').replace(/\s+/g, ' ').trim();
   };
 
@@ -41,6 +47,8 @@
     const [links, setLinks] = useState(null);
     const [showResolved, setShowResolved] = useState(false);
     const [text, setText] = useState('');
+    // What a new comment goes on: the selected block, or the whole page.
+    const [target, setTarget] = useState('block');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [linkLabel, setLinkLabel] = useState('');
@@ -49,7 +57,22 @@
 
     const flat = flatten(blocks || []);
     const selIndex = selectedId ? flat.findIndex((b) => b.clientId === selectedId) : -1;
-    const selected = selIndex >= 0 ? { id: 'b' + (selIndex + 1), type: flat[selIndex].name, words: textOf(flat[selIndex]).slice(0, 120) } : null;
+    const picked = selIndex >= 0 ? { id: 'b' + (selIndex + 1), type: flat[selIndex].name, words: textOf(flat[selIndex]).slice(0, 120) } : null;
+    // Selecting a different block makes it the target again.
+    useEffect(() => {
+      if (selectedId) setTarget('block');
+    }, [selectedId]);
+    const selected = picked && target === 'block' ? picked : null;
+
+    // The block toolbar's Comment button (below) opens this sidebar on its block and asks for the box.
+    useEffect(() => {
+      const compose = () => {
+        setTarget('block');
+        setTimeout(() => document.querySelector('.easy-markup-compose textarea')?.focus(), 150);
+      };
+      document.addEventListener(COMPOSE_EVENT, compose);
+      return () => document.removeEventListener(COMPOSE_EVENT, compose);
+    }, []);
 
     const load = () => {
       if (!postId) return;
@@ -114,9 +137,20 @@
           h(
             'form',
             { onSubmit: add },
+            picked &&
+              h(RadioControl, {
+                label: 'Comment on',
+                selected: target,
+                options: [
+                  { label: `Selected ${label(picked.type).toLowerCase()}`, value: 'block' },
+                  { label: 'Whole page', value: 'page' },
+                ],
+                onChange: setTarget,
+              }),
             h(TextareaControl, {
+              className: 'easy-markup-compose',
               label: selected ? `On the selected ${label(selected.type).toLowerCase()}` : 'On the whole page',
-              help: 'Select a block to comment on it. Save the page first if you added or moved blocks.',
+              help: picked ? 'Save the page first if you added or moved blocks.' : 'Select a block to comment on it, or use Comment on its toolbar. Save the page first if you added or moved blocks.',
               value: text,
               onChange: setText,
               rows: 4,
@@ -209,4 +243,38 @@
   }
 
   registerPlugin('easy-markup', { render: CommentsSidebar, icon: 'admin-comments' });
+
+  // A Comment button on every block's toolbar: selects the block, opens the Comments sidebar and puts
+  // the cursor in the comment box.
+  const withCommentButton = createHigherOrderComponent(
+    (BlockEdit) => (props) => {
+      const { enableComplementaryArea } = useDispatch('core/interface');
+      const { selectBlock } = useDispatch('core/block-editor');
+      if (!props.isSelected) return h(BlockEdit, props);
+      return h(
+        Fragment,
+        null,
+        h(BlockEdit, props),
+        h(
+          BlockControls,
+          { group: 'other' },
+          h(
+            ToolbarGroup,
+            null,
+            h(ToolbarButton, {
+              icon: 'admin-comments',
+              label: 'Comment',
+              onClick: () => {
+                selectBlock(props.clientId);
+                enableComplementaryArea('core', SIDEBAR);
+                document.dispatchEvent(new CustomEvent(COMPOSE_EVENT));
+              },
+            }),
+          ),
+        ),
+      );
+    },
+    'withEasyMarkupCommentButton',
+  );
+  addFilter('editor.BlockEdit', 'easy-markup/comment-button', withCommentButton);
 })();
