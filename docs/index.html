@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Easy Markup Docs</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: a sticky section list beside one reading column; each how-to is a captioned screencast plus its steps. */
+:root {
+  --bg: #fbfbfc;
+  --surface: #ffffff;
+  --fg: #1d2327;
+  --muted: #55606b;
+  --line: #e2e5ea;
+  --accent: #2271b1;
+  --accent-soft: #e8f1f9;
+  --mark: #d63638;
+  --code-bg: #f2f4f7;
+  --display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171b; --surface: #1b1f24; --fg: #e8eaed; --muted: #a2abb5; --line: #2c3239;
+    --accent: #72aee6; --accent-soft: #1c2a37; --mark: #f08080; --code-bg: #20252b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171b; --surface: #1b1f24; --fg: #e8eaed; --muted: #a2abb5; --line: #2c3239;
+  --accent: #72aee6; --accent-soft: #1c2a37; --mark: #f08080; --code-bg: #20252b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, video:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; padding-block: 40px 80px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+.toc .name { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; margin: 0 0 4px; }
+.toc .ver { color: var(--muted); font: 12px var(--mono); margin: 0 0 20px; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.toc a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--fg); text-decoration: none; }
+.toc a:hover { background: var(--accent-soft); color: var(--accent); }
+main { min-width: 0; }
+header.intro { padding-bottom: 32px; border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+h1 { font: 700 clamp(32px, 5vw, 46px)/1.08 var(--display); letter-spacing: -0.02em; margin: 0 0 16px; text-wrap: balance; }
+h1 .mk { color: var(--accent); box-shadow: inset 0 -0.18em 0 var(--accent-soft); }
+.lede { font-size: 19px; color: var(--muted); max-width: 62ch; margin: 0; }
+h2 { font: 700 26px/1.2 var(--display); letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
+h3 { font: 600 17px/1.3 var(--body); margin: 28px 0 8px; }
+section { scroll-margin-top: 24px; margin-bottom: 64px; }
+p, li { max-width: 68ch; }
+.howto { display: grid; gap: 20px; }
+figure { margin: 0; }
+video { display: block; width: 100%; max-width: 100%; aspect-ratio: 1280 / 800; height: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; }
+figcaption { color: var(--muted); font-size: 13px; margin-top: 8px; }
+ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+ol.steps li::marker { color: var(--accent); font-weight: 600; }
+.ui { font: 500 0.92em var(--body); background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+code { font: 0.88em var(--mono); background: var(--code-bg); border-radius: 4px; padding: 1px 5px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font: 13.5px/1.55 var(--mono); }
+pre code { background: none; padding: 0; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; max-width: 68ch; }
+.note p { margin: 0; }
+dl.faq { display: grid; gap: 18px; margin: 0; }
+dl.faq dt { font-weight: 600; }
+dl.faq dd { margin: 4px 0 0; color: var(--fg); max-width: 68ch; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 20px; }
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 24px 56px; }
+  nav.toc { position: static; }
+  .toc ol { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" aria-label="Sections">
+    <p class="name">Easy Markup</p>
+    <p class="ver">WordPress plugin · v1.4.0</p>
+    <ol>
+      <li><a href="#on-the-page">Comment on a page</a></li>
+      <li><a href="#in-the-editor">Comment in the editor</a></li>
+      <li><a href="#review-links">Review links</a></li>
+      <li><a href="#manage">Manage comments</a></li>
+      <li><a href="#settings">Settings</a></li>
+      <li><a href="#who">Who can comment</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#developers">For developers</a></li>
+      <li><a href="#faq">Questions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="intro">
+      <p class="eyebrow">Docs</p>
+      <h1>Comment on any page, or any <span class="mk">block</span>, right where it is.</h1>
+      <p class="lede">Easy Markup turns a WordPress page into a review copy. Editors point at a paragraph, a heading or an image and leave a note on it. Clients and reviewers do the same with a review link, no account needed. Every comment lands in one list you can resolve as you go.</p>
+    </header>
+
+    <section id="on-the-page" aria-labelledby="h-page">
+      <h2 id="h-page">Comment on a page</h2>
+      <div class="howto">
+        <figure>
+          <video controls preload="metadata" playsinline poster="videos/comment-on-page.jpg" aria-describedby="cap-page">
+            <source src="videos/comment-on-page.mp4" type="video/mp4">
+            <track kind="captions" src="videos/comment-on-page.vtt" srclang="en" label="English" default>
+          </video>
+          <figcaption id="cap-page">20 seconds. An editor comments on a paragraph and on the whole page.</figcaption>
+        </figure>
+        <ol class="steps">
+          <li>Open any page while signed in as an editor or admin. Click <span class="ui">Comment</span> at the bottom right.</li>
+          <li>Move the pointer over the page. The block under it is outlined.</li>
+          <li>Click a block, or Tab to it and press Enter. The box shows which block you picked.</li>
+          <li>Type the comment and click <span class="ui">Send</span>. Click a name under the box to mention a teammate; they get an email.</li>
+          <li>For a note about the page as a whole, click <span class="ui">Whole page</span>.</li>
+          <li>Click <span class="ui">Done commenting</span> to use links and buttons on the page again.</li>
+        </ol>
+        <div class="note"><p>You can also start from the admin bar: <span class="ui">Markup</span> &gt; <span class="ui">Comment on this page</span>.</p></div>
+      </div>
+    </section>
+
+    <section id="in-the-editor" aria-labelledby="h-editor">
+      <h2 id="h-editor">Comment in the editor</h2>
+      <div class="howto">
+        <figure>
+          <video controls preload="metadata" playsinline poster="videos/comment-in-editor.jpg" aria-describedby="cap-editor">
+            <source src="videos/comment-in-editor.mp4" type="video/mp4">
+            <track kind="captions" src="videos/comment-in-editor.vtt" srclang="en" label="English" default>
+          </video>
+          <figcaption id="cap-editor">21 seconds. The block toolbar's Comment button, the Whole page choice, Show and Resolve.</figcaption>
+        </figure>
+        <ol class="steps">
+          <li>In the block editor, select a block and click <span class="ui">Comment</span> on its toolbar. The Comments sidebar opens with the cursor in the box.</li>
+          <li>Type and click <span class="ui">Add comment</span>.</li>
+          <li>To comment on the page instead, choose <span class="ui">Whole page</span> above the box. Selecting another block switches back.</li>
+          <li>The sidebar lists the page's comments, open ones first. <span class="ui">Show</span> selects the block a comment is on.</li>
+          <li><span class="ui">Resolve</span> marks a comment done; <span class="ui">Show resolved</span> brings it back into view.</li>
+        </ol>
+        <div class="note"><p>Comments are tied to the saved page. If you added or moved blocks, save first so the comment lands on the right one.</p></div>
+      </div>
+    </section>
+
+    <section id="review-links" aria-labelledby="h-links">
+      <h2 id="h-links">Review links</h2>
+      <div class="howto">
+        <figure>
+          <video controls preload="metadata" playsinline poster="videos/review-links.jpg" aria-describedby="cap-links">
+            <source src="videos/review-links.mp4" type="video/mp4">
+            <track kind="captions" src="videos/review-links.vtt" srclang="en" label="English" default>
+          </video>
+          <figcaption id="cap-links">33 seconds. An editor makes a whole-site link; a client comments on two pages.</figcaption>
+        </figure>
+        <ol class="steps">
+          <li>In the editor's Comments sidebar, open <span class="ui">Review links</span>.</li>
+          <li>Say who it's for and how long it works: 7, 30 or 90 days, or until turned off.</li>
+          <li>Tick <span class="ui">Works on every page of the site</span> for a whole-site link, or leave it for this page only.</li>
+          <li>Click <span class="ui">Make a review link</span>, then <span class="ui">Copy link</span> and send it.</li>
+          <li>The reviewer opens it and lands in comment mode. They give their name once and comment the same way an editor does.</li>
+        </ol>
+        <div class="note"><p>Turn a link off from the sidebar or from <span class="ui">Markup</span> &gt; <span class="ui">Review links</span>. Its guests lose access at once.</p></div>
+      </div>
+    </section>
+
+    <section id="manage" aria-labelledby="h-manage">
+      <h2 id="h-manage">Manage comments</h2>
+      <div class="howto">
+        <figure>
+          <video controls preload="metadata" playsinline poster="videos/manage-comments.jpg" aria-describedby="cap-manage">
+            <source src="videos/manage-comments.mp4" type="video/mp4">
+            <track kind="captions" src="videos/manage-comments.vtt" srclang="en" label="English" default>
+          </video>
+          <figcaption id="cap-manage">15 seconds. The Markup list, View on page, and the color settings.</figcaption>
+        </figure>
+        <p><span class="ui">Markup</span> in the admin menu lists every comment on every page, with the number of open comments on the menu itself. Filter by page and by open or resolved.</p>
+        <ul>
+          <li><strong>View on page</strong> scrolls to the block, outlines it and shows the comment.</li>
+          <li><strong>Edit page</strong> opens the editor, where the sidebar has the same comments.</li>
+          <li><strong>Resolve</strong>, <strong>Reopen</strong> and <strong>Delete</strong> work here too. Delete is permanent; Resolve keeps the comment.</li>
+          <li><strong>Review links</strong>, under the list, shows every link with the page it works on, how many comments it brought in, and <strong>Turn off</strong>. Editors and admins make whole-site links here.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="settings" aria-labelledby="h-settings">
+      <h2 id="h-settings">Settings</h2>
+      <p>Admins find these under <span class="ui">Settings</span> &gt; <span class="ui">Easy Markup</span>.</p>
+      <h3>Guest comment emails</h3>
+      <p>Tick <span class="ui">Send an email when a guest comments</span> and list who should get them, one address per line or separated by commas (up to 20). Each comment left through a review link then emails everyone on the list with the page, the block and its first words, the comment, the guest's name, which review link they used, and links to the comment and to the full list.</p>
+      <p>Comments from editors and admins don't send these; they mention each other instead. Entries that aren't email addresses are left out with a message, and the switch stays off until the list has at least one address.</p>
+      <h3>Colors</h3>
+      <p>Match comment mode to your site. Clear a color to go back to the default.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Setting</th><th>Colors</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td>Accent</td><td>Block outlines, the Comment button while comment mode is on, quote bars, focus rings</td><td><code>#2271b1</code></td></tr>
+            <tr><td>Button</td><td>The Comment and Send buttons</td><td><code>#1d2327</code></td></tr>
+            <tr><td>Button text</td><td>Text on those buttons</td><td><code>#ffffff</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="who" aria-labelledby="h-who">
+      <h2 id="h-who">Who can comment</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Who</th><th>Where</th><th>How they appear</th><th>Mentions</th></tr></thead>
+          <tbody>
+            <tr><td>Anyone who can edit the page</td><td>That page</td><td>Their display name</td><td>Can mention staff</td></tr>
+            <tr><td>Guest with a page link</td><td>That page</td><td>The name they give, marked "review link"</td><td>Can't mention; can email the list in Settings</td></tr>
+            <tr><td>Guest with a whole-site link</td><td>Every published page</td><td>The name they give, marked "review link"</td><td>Can't mention; can email the list in Settings</td></tr>
+            <tr><td>Anyone else</td><td>Nowhere</td><td colspan="2">They see no Comment button and the API refuses them</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Whole-site links are made by editors and admins (users who can edit others' pages). One link can bring in at most 30 comments an hour, across all its guests.</p>
+    </section>
+
+    <section id="install" aria-labelledby="h-install">
+      <h2 id="h-install">Install</h2>
+      <ol class="steps">
+        <li>Download <code>easy-markup.zip</code> from the latest release.</li>
+        <li>In WordPress, go to <span class="ui">Plugins</span> &gt; <span class="ui">Add New</span> &gt; <span class="ui">Upload Plugin</span>, choose the zip and activate it.</li>
+        <li>Open any page and click <span class="ui">Comment</span>.</li>
+      </ol>
+      <p>Needs WordPress 6.6 or later and PHP 8.1 or later. Activation creates two tables: <code>{prefix}easy_markup_comments</code> and <code>{prefix}easy_markup_links</code>.</p>
+    </section>
+
+    <section id="developers" aria-labelledby="h-dev">
+      <h2 id="h-dev">For developers</h2>
+      <h3>How a block is identified</h3>
+      <p>WordPress blocks have no saved IDs, so a block's ID is its place in the page content: <code>b1</code>, <code>b2</code> and so on, counting every block, inner blocks included, in order. For people who can comment, each content block renders with two attributes. The header, footer and template are not numbered.</p>
+      <pre><code>&lt;p data-em-block="b7" data-em-type="core/paragraph"&gt;…&lt;/p&gt;</code></pre>
+      <p>A comment also keeps the block's first words, so it still finds its block after edits shift the numbers.</p>
+      <h3>REST API</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Route</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>POST /easy-markup/v1/comments</code></td><td>Add a comment: <code>post</code>, <code>block</code>, <code>quote</code>, <code>body</code>, and <code>name</code> for guests</td></tr>
+            <tr><td><code>GET /easy-markup/v1/comments?post=ID</code></td><td>A page's comments (staff)</td></tr>
+            <tr><td><code>POST /easy-markup/v1/comments/ID</code></td><td><code>action</code>: <code>resolve</code> or <code>reopen</code></td></tr>
+            <tr><td><code>DELETE /easy-markup/v1/comments/ID</code></td><td>Delete a comment</td></tr>
+            <tr><td><code>GET|POST /easy-markup/v1/links</code></td><td>List or make review links (<code>site: true</code> for every page)</td></tr>
+            <tr><td><code>DELETE /easy-markup/v1/links/ID</code></td><td>Turn a link off</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Hook</h3>
+      <pre><code>add_action( 'easy_markup_comment_added', function ( $comment, $by ) {
+	// $comment: the stored row. $by: array( 'user' =&gt; WP_User ) or array( 'link' =&gt; link row ).
+}, 10, 2 );</code></pre>
+      <h3>CSS custom properties</h3>
+      <p>The color settings set <code>--em-accent</code>, <code>--em-button</code> and <code>--em-button-text</code> on <code>:root</code>. A theme can set them too.</p>
+      <h3>Coding standards</h3>
+      <p>The PHP passes the WordPress Coding Standards. <code>composer lint</code> runs PHPCS; every push to <code>main</code> lints, builds the zip, and releases the version in the plugin header.</p>
+    </section>
+
+    <section id="faq" aria-labelledby="h-faq">
+      <h2 id="h-faq">Questions</h2>
+      <dl class="faq">
+        <dt>Does a review link let someone edit the page?</dt>
+        <dd>No. It only lets them leave comments. They can't see other people's comments or anything in the admin.</dd>
+        <dt>What happens to a comment when the block is deleted?</dt>
+        <dd>The comment stays in the list with the block's type and first words. View on page tells you the block is no longer there.</dd>
+        <dt>Who gets emails?</dt>
+        <dd>People mentioned by handle in a staff comment (a handle is the part of their email address before the at sign), and, if guest comment emails are on, the addresses in Settings for each guest comment.</dd>
+        <dt>Do visitors see anything?</dt>
+        <dd>No. Pages look the same to visitors; the Comment button and block attributes only appear for people who can comment.</dd>
+      </dl>
+    </section>
+
+    <footer>Easy Markup is licensed GPL-2.0-or-later. Screencasts recorded on a sample site.</footer>
+  </main>
+</div>
+</body>
+</html>
