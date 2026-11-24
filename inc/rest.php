@@ -22,15 +22,22 @@ add_action(
 	function () {
 		$ns    = 'easy-markup/v1';
 		$staff = function ( WP_REST_Request $r ) {
-			$post_id = (int) $r['post'];
-			if ( ! $post_id && $r['id'] ) {
+			// A route about one comment or link (/comments/<id>, /links/<id>): the item's own page
+			// decides, and any `post` sent with it is ignored. Only the route's own <id> counts, never an
+			// `id` added to the query, so a list route can't be pointed at another page's item.
+			$url_params = $r->get_url_params();
+			if ( isset( $url_params['id'] ) ) {
 				$is_link = 'links' === explode( '/', trim( $r->get_route(), '/' ) )[2];
-				$row     = $is_link ? easy_markup_get_link( (int) $r['id'] ) : easy_markup_get_comment( (int) $r['id'] );
-				if ( $is_link && $row && easy_markup_link_is_site( $row ) ) {
+				$row     = $is_link ? easy_markup_get_link( (int) $url_params['id'] ) : easy_markup_get_comment( (int) $url_params['id'] );
+				if ( ! $row ) {
+					return false;
+				}
+				if ( $is_link && easy_markup_link_is_site( $row ) ) {
 					return current_user_can( EASY_MARKUP_SITE_CAP );
 				}
-				$post_id = $row ? (int) $row->post_id : 0;
+				return easy_markup_is_staff( (int) $row->post_id );
 			}
+			$post_id = (int) $r['post'];
 			return $post_id && easy_markup_is_staff( $post_id );
 		};
 

@@ -30,14 +30,16 @@ function easy_markup_link_is_site( object $link ): bool {
 }
 
 /**
- * Whether a page can be commented on with a site link: published, of a type with public pages.
+ * Whether a page can be commented on with a site link: published, not password-protected, of a type
+ * with public pages.
  *
  * @param int $post_id Page ID.
  * @return bool
  */
 function easy_markup_open_to_site_links( int $post_id ): bool {
-	$type = get_post_type( $post_id );
-	return $type && 'publish' === get_post_status( $post_id ) && is_post_type_viewable( $type );
+	$post = get_post( $post_id );
+	// Password-protected pages need their own page link: a site link doesn't open them.
+	return $post && 'publish' === $post->post_status && '' === $post->post_password && is_post_type_viewable( $post->post_type );
 }
 
 /**
