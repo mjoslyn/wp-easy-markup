@@ -1,0 +1,25 @@
+/* Easy Markup: comment mode on the page (assets/markup.js). */
+.em-on [data-em-block] { cursor: pointer; }
+.em-hover { outline: 2px dashed #2271b1 !important; outline-offset: 2px; }
+.em-picked { outline: 3px solid #2271b1 !important; outline-offset: 2px; }
+.em-bar { position: fixed; right: 16px; bottom: 16px; z-index: 100001; display: flex; gap: 8px; }
+.em-button { border: 0; border-radius: 999px; padding: 10px 16px; background: #1d2327; color: #fff; font: 600 14px/1.2 system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); cursor: pointer; }
+.em-button[aria-pressed="true"] { background: #2271b1; }
+.em-button--quiet { background: #fff; color: #1d2327; }
+.em-button:focus-visible, .em-panel button:focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
+.em-panel { position: fixed; right: 16px; bottom: 68px; z-index: 100001; box-sizing: border-box; width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 100px); overflow: auto; background: #fff; color: #1d2327; border-radius: 8px; box-shadow: 0 8px 30px rgba(0, 0, 0, .25); padding: 14px; font: 14px/1.45 system-ui, sans-serif; text-align: left; }
+.em-panel p { margin: 0 0 8px; }
+.em-panel .em-quote { color: #50575e; font-size: 12px; border-left: 3px solid #2271b1; padding-left: 8px; max-height: 3.6em; overflow: hidden; }
+.em-panel label { display: block; margin: 8px 0 4px; font-weight: 600; font-size: 12px; }
+.em-panel input, .em-panel textarea { box-sizing: border-box; display: block; width: 100%; margin-top: 4px; border: 1px solid #c3c4c7; border-radius: 4px; padding: 6px 8px; font: inherit; font-weight: 400; color: inherit; background: #fff; }
+.em-panel textarea { min-height: 90px; resize: vertical; }
+.em-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.em-row button { border: 1px solid #c3c4c7; background: #fff; color: #1d2327; border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; }
+.em-row button.em-send { background: #1d2327; color: #fff; border-color: #1d2327; }
+.em-error { color: #b32d2e; font-size: 12px; }
+.em-hint { color: #50575e; font-size: 12px; }
+.em-chip { border: 1px solid #c3c4c7; border-radius: 999px; background: #f6f7f7; color: #1d2327; padding: 1px 8px; font: 12px/1.6 system-ui, sans-serif; cursor: pointer; margin: 2px 0; }
+.em-card .em-body { white-space: pre-wrap; }
+.em-card .em-meta { color: #50575e; font-size: 12px; }
+.em-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media print { .em-bar, .em-panel { display: none; } }

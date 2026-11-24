@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="Easy Markup">
+	<description>WordPress Coding Standards for Easy Markup.</description>
+
+	<file>.</file>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/assets/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<rule ref="WordPress"/>
+	<rule ref="PHPCompatibilityWP"/>
+	<config name="testVersion" value="8.1-"/>
+	<config name="minimum_wp_version" value="6.6"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="easy-markup"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="easy_markup"/>
+				<element value="EASY_MARKUP"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>
