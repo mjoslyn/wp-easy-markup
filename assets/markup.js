@@ -28,6 +28,68 @@
     return n;
   };
 
+  // Page snapshots (Settings > Easy Markup): html2canvas loads the first time a comment box opens.
+  let h2cLoading = null;
+  const loadH2C = () => {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    h2cLoading ??= new Promise((done) => {
+      const s = document.createElement('script');
+      s.src = cfg.h2c;
+      s.onload = () => done(window.html2canvas || null);
+      s.onerror = () => done(null);
+      document.head.append(s);
+    });
+    return h2cLoading;
+  };
+  // A JPEG data: URL of the whole page as it looks now, with the commented block still outlined and
+  // without the comment bar or box; scaled to fit 1600 x 8000. Null if it can't be made (for example
+  // an image from another site the browser won't let a canvas read).
+  const capture = async () => {
+    try {
+      const h2c = await loadH2C();
+      if (!h2c) return null;
+      // Where the commented block is on the page (document coordinates), for the frame.
+      const picked = document.querySelector('.em-picked');
+      const box = picked?.getBoundingClientRect();
+      const frame = box && {
+        x: box.left + window.scrollX - 6,
+        y: box.top + window.scrollY - 6,
+        w: box.width + 12,
+        h: box.height + 12,
+        accent: getComputedStyle(document.documentElement).getPropertyValue('--em-accent').trim() || '#2271b1',
+      };
+      const canvas = await h2c(document.body, {
+        backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff',
+        scale: 1,
+        useCORS: true,
+        logging: false,
+        // The admin bar is pinned to the screen and isn't page content; it would land mid-picture.
+        ignoreElements: (n) => n.id === 'wpadminbar' || n.classList?.contains('em-bar') || n.classList?.contains('em-panel') || n.classList?.contains('em-card'),
+        // html2canvas doesn't draw outlines, so the captured copy gets a frame drawn over the commented
+        // block where it sits on the page; the page's own layout is left alone.
+        onclone: (doc) => {
+          doc.querySelectorAll('.em-hover').forEach((n) => n.classList.remove('em-hover'));
+          if (!frame) return;
+          const f = doc.createElement('div');
+          f.style.cssText = `position:absolute;left:${frame.x}px;top:${frame.y}px;width:${frame.w}px;height:${frame.h}px;border:4px solid ${frame.accent};border-radius:6px;box-sizing:border-box;z-index:2147483647;pointer-events:none`;
+          doc.body.appendChild(f);
+        },
+      });
+      const k = Math.min(1, 1600 / canvas.width, 8000 / canvas.height);
+      let out = canvas;
+      if (k < 1) {
+        out = document.createElement('canvas');
+        out.width = Math.round(canvas.width * k);
+        out.height = Math.round(canvas.height * k);
+        out.getContext('2d').drawImage(canvas, 0, 0, out.width, out.height);
+      }
+      return out.toDataURL('image/jpeg', 0.72);
+    } catch {
+      return null;
+    }
+  };
+  const within = (promise, ms) => Promise.race([promise, new Promise((done) => setTimeout(() => done(null), ms))]);
+
   const bar = el('div', { className: 'em-bar' });
   const button = el('button', { type: 'button', className: 'em-button', textContent: 'Comment' });
   button.setAttribute('aria-pressed', 'false');
@@ -94,6 +156,8 @@
     block?.classList.add('em-picked');
     const type = block?.dataset.emType || '';
     const quote = block ? words(block) : '';
+    // Captured after the box opens and the block is outlined, so the picture shows which block it is.
+    const snapshot = cfg.snapshots ? new Promise((done) => requestAnimationFrame(() => done(capture()))) : Promise.resolve(null);
     panel = el('form', { className: 'em-panel' });
     panel.setAttribute('aria-label', block ? 'Comment on this block' : 'Comment on the whole page');
     panel.append(el('p', { className: 'em-quote', textContent: label(type) + (quote ? ': ' + quote : '') }));
@@ -106,6 +170,7 @@
     panel.append(el('label', {}, 'Comment', body));
     const chips = cfg.guest ? null : mentionChips(body);
     if (chips) panel.append(chips);
+    if (cfg.snapshots) panel.append(el('p', { className: 'em-hint', textContent: 'A picture of the page is saved with your comment.' }));
     const error = el('p', { className: 'em-error' });
     error.setAttribute('role', 'alert');
     const cancel = el('button', { type: 'button', textContent: 'Cancel' });
@@ -121,13 +186,14 @@
       send.disabled = true;
       error.textContent = '';
       if (name) keepName(name.value.trim());
+      const shot = await within(snapshot, 8000);
       const headers = { 'Content-Type': 'application/json' };
       if (cfg.nonce) headers['X-WP-Nonce'] = cfg.nonce;
       const res = await fetch(cfg.api + 'comments', {
         method: 'POST',
         credentials: 'same-origin',
         headers,
-        body: JSON.stringify({ post: cfg.post, block: block?.dataset.emBlock || '', quote, body: body.value, name: name ? name.value : undefined }),
+        body: JSON.stringify({ post: cfg.post, block: block?.dataset.emBlock || '', quote, body: body.value, name: name ? name.value : undefined, snapshot: shot || undefined }),
       }).catch(() => null);
       const out = res ? await res.json().catch(() => null) : null;
       send.disabled = false;
@@ -198,6 +264,10 @@
       el('p', { className: 'em-body', textContent: c.body }),
       el('p', { className: 'em-meta', textContent: `${c.author}${c.guest ? ' (review link)' : ''}, ${c.created}${c.status === 'resolved' ? `, resolved ${c.resolved}` : ''}` }),
     );
+    if (c.snapshot) {
+      const a = el('a', { href: c.snapshot, target: '_blank', rel: 'noopener', className: 'em-shot' }, el('img', { src: c.snapshot, alt: 'The page when the comment was written' }));
+      card.append(el('p', { className: 'em-hint', textContent: 'As it looked then:' }), a);
+    }
     if (c.block && !b) card.append(el('p', { className: 'em-error', textContent: 'That block is no longer on the page.' }));
     const close = el('button', { type: 'button', textContent: 'Close' });
     close.addEventListener('click', () => (card.remove(), b?.classList.remove('em-picked')));

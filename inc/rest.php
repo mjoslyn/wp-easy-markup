@@ -56,11 +56,12 @@ add_action(
 						$by      = easy_markup_is_staff( $post_id ) ? array( 'user' => wp_get_current_user() ) : array( 'link' => easy_markup_guest_link( $post_id ) );
 						$row     = easy_markup_add_comment(
 							array(
-								'post'  => $post_id,
-								'block' => (string) $r['block'],
-								'quote' => (string) $r['quote'],
-								'body'  => (string) $r['body'],
-								'name'  => (string) $r['name'],
+								'post'     => $post_id,
+								'block'    => (string) $r['block'],
+								'quote'    => (string) $r['quote'],
+								'body'     => (string) $r['body'],
+								'name'     => (string) $r['name'],
+								'snapshot' => (string) $r['snapshot'],
 							),
 							$by
 						);

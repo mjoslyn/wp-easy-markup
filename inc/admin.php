@@ -121,7 +121,7 @@ function easy_markup_admin_page(): void {
 					<tr<?php echo 'open' === $r->status ? '' : ' style="opacity:.65"'; ?>>
 						<td><a href="<?php echo esc_url( add_query_arg( 'post', (int) $r->post_id, $base ) ); ?>"><?php echo esc_html( get_the_title( (int) $r->post_id ) ); ?></a></td>
 						<td><strong><?php echo esc_html( easy_markup_type_label( (string) $r->block_type ) ); ?></strong><?php echo '' !== $r->quote ? '<br><span style="color:#50575e">' . esc_html( mb_substr( $r->quote, 0, 90 ) ) . '</span>' : ''; ?></td>
-						<td style="white-space:pre-wrap"><?php echo esc_html( $r->body ); ?><?php echo 'resolved' === $r->status ? '<br><em style="color:#50575e">Resolved ' . esc_html( $out['resolved'] . ( $out['resolved_by'] ? ' by ' . $out['resolved_by'] : '' ) ) . '</em>' : ''; ?></td>
+						<td style="white-space:pre-wrap"><?php echo esc_html( $r->body ); ?><?php echo '' !== $out['snapshot'] ? '<br><a href="' . esc_url( $out['snapshot'] ) . '" target="_blank" rel="noopener"><img src="' . esc_url( $out['snapshot'] ) . '" alt="' . esc_attr__( 'Snapshot of the page', 'easy-markup' ) . '" loading="lazy" style="max-width:220px;max-height:120px;margin-top:6px;border:1px solid #dcdcde;border-radius:4px"></a>' : ''; ?><?php echo 'resolved' === $r->status ? '<br><em style="color:#50575e">Resolved ' . esc_html( $out['resolved'] . ( $out['resolved_by'] ? ' by ' . $out['resolved_by'] : '' ) ) . '</em>' : ''; ?></td>
 						<td><?php echo esc_html( $r->author ); ?><?php echo $r->link_id ? ' <span style="color:#50575e">(review link)</span>' : ''; ?><br><span style="color:#50575e"><?php echo esc_html( $out['created'] ); ?></span></td>
 						<td>
 							<a href="<?php echo esc_url( $out['show_url'] ); ?>">View on page</a> |

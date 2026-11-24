@@ -48,14 +48,16 @@ add_action(
 			'easy-markup',
 			'easyMarkup',
 			array(
-				'api'    => esc_url_raw( rest_url( 'easy-markup/v1/' ) ),
-				'nonce'  => $staff ? wp_create_nonce( 'wp_rest' ) : '',
-				'post'   => $post_id,
-				'guest'  => ! $staff,
-				'start'  => $start || null !== $show,
-				'show'   => $show,
-				'people' => $staff ? easy_markup_people_out() : array(),
-				'labels' => easy_markup_type_labels(),
+				'api'       => esc_url_raw( rest_url( 'easy-markup/v1/' ) ),
+				'nonce'     => $staff ? wp_create_nonce( 'wp_rest' ) : '',
+				'post'      => $post_id,
+				'guest'     => ! $staff,
+				'start'     => $start || null !== $show,
+				'show'      => $show,
+				'people'    => $staff ? easy_markup_people_out() : array(),
+				'labels'    => easy_markup_type_labels(),
+				'snapshots' => easy_markup_snapshots_on(),
+				'h2c'       => EASY_MARKUP_URL . 'assets/vendor/html2canvas.min.js?ver=1.4.1',
 			)
 		);
 	}

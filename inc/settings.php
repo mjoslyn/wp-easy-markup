@@ -75,6 +75,15 @@ add_action(
 		);
 		register_setting(
 			'easy_markup',
+			'easy_markup_snapshots',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => fn( $v ) => '1' === (string) $v ? '1' : '0',
+				'default'           => '1',
+			)
+		);
+		register_setting(
+			'easy_markup',
 			'easy_markup_notify',
 			array(
 				'type'              => 'array',
@@ -147,6 +156,20 @@ function easy_markup_settings_page(): void {
 						</td>
 					</tr>
 				<?php endforeach; ?>
+			</table>
+			<h2><?php esc_html_e( 'Snapshots', 'easy-markup' ); ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Page snapshots', 'easy-markup' ); ?></th>
+					<td>
+						<input type="hidden" name="easy_markup_snapshots" value="0">
+						<label for="easy-markup-snapshots">
+							<input type="checkbox" id="easy-markup-snapshots" name="easy_markup_snapshots" value="1" <?php checked( easy_markup_snapshots_on() ); ?>>
+							<?php esc_html_e( 'Save a picture of the page with each comment left on it', 'easy-markup' ); ?>
+						</label>
+						<p class="description"><?php esc_html_e( 'Shows the whole page as it looked when the comment was written, with the block outlined, even after the page changes. Only editors and admins can see snapshots. Comments added in the editor sidebar have none.', 'easy-markup' ); ?></p>
+					</td>
+				</tr>
 			</table>
 			<?php $notify = easy_markup_notify_settings(); ?>
 			<h2><?php esc_html_e( 'Guest comment emails', 'easy-markup' ); ?></h2>

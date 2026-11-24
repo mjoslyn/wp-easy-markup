@@ -181,6 +181,7 @@
               { key: r.id, style: { borderTop: '1px solid #e0e0e0', padding: '10px 0', opacity: r.status === 'open' ? 1 : 0.6 } },
               h('div', { style: { fontSize: '12px', color: '#50575e' } }, h('strong', null, label(r.block_type)), r.quote ? ': ' + r.quote.slice(0, 80) : ''),
               h('p', { style: { margin: '4px 0', whiteSpace: 'pre-wrap' } }, r.body),
+              r.snapshot && h('a', { href: r.snapshot, target: '_blank', rel: 'noopener' }, h('img', { src: r.snapshot, alt: 'Snapshot of the page', loading: 'lazy', style: { display: 'block', maxWidth: '100%', maxHeight: '140px', objectFit: 'contain', border: '1px solid #dcdcde', borderRadius: '4px', margin: '4px 0' } })),
               h('div', { style: { fontSize: '12px', color: '#50575e' } }, `${r.author}${r.guest ? ' (review link)' : ''}, ${r.created}${r.status === 'resolved' ? `, resolved ${r.resolved}${r.resolved_by ? ' by ' + r.resolved_by : ''}` : ''}`),
               h(
                 'div',

@@ -50,6 +50,7 @@ function easy_markup_install(): void {
 		block varchar(32) NOT NULL DEFAULT '',
 		block_type varchar(100) NOT NULL DEFAULT '',
 		quote varchar(255) NOT NULL DEFAULT '',
+		snapshot varchar(64) NOT NULL DEFAULT '',
 		body text NOT NULL,
 		author varchar(100) NOT NULL DEFAULT '',
 		author_id bigint(20) unsigned DEFAULT NULL,
@@ -119,7 +120,8 @@ function easy_markup_error( string $code ): WP_Error {
 /**
  * Leave a comment.
  *
- * @param array $c  post, block ('' for the whole page), body, quote (the block's words as shown), name (guests).
+ * @param array $c  post, block ('' for the whole page), body, quote (the block's words as shown), name (guests),
+ *                  snapshot (a data: URL of the page, when snapshots are on).
  * @param array $by array( 'user' => WP_User ) or array( 'link' => link row ).
  * @return object|WP_Error The comment row, or why it wasn't taken.
  */
@@ -169,6 +171,12 @@ function easy_markup_add_comment( array $c, array $by ) {
 		$link_id   = null;
 	}
 
+	// A picture of the page as it looked (comments left on the page, when snapshots are on).
+	$snapshot = '';
+	if ( easy_markup_snapshots_on() && ! empty( $c['snapshot'] ) && is_string( $c['snapshot'] ) ) {
+		$snapshot = easy_markup_store_snapshot( $c['snapshot'] );
+	}
+
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- The plugin's own table.
 	$ok = $wpdb->insert(
 		easy_markup_table( 'comments' ),
@@ -178,6 +186,7 @@ function easy_markup_add_comment( array $c, array $by ) {
 			'block'      => $block,
 			'block_type' => $type,
 			'quote'      => $quote,
+			'snapshot'   => $snapshot,
 			'body'       => $body,
 			'author'     => $author,
 			'author_id'  => $author_id,
@@ -186,6 +195,7 @@ function easy_markup_add_comment( array $c, array $by ) {
 		)
 	);
 	if ( ! $ok ) {
+		easy_markup_delete_snapshot( (object) array( 'snapshot' => $snapshot ) );
 		return easy_markup_error( 'failed' );
 	}
 	$id = (int) $wpdb->insert_id;
@@ -317,6 +327,10 @@ function easy_markup_set_status( int $id, string $status ): bool {
  */
 function easy_markup_delete_comment( int $id ): bool {
 	global $wpdb;
+	$row = easy_markup_get_comment( $id );
+	if ( $row ) {
+		easy_markup_delete_snapshot( $row );
+	}
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin's own table.
 	return (bool) $wpdb->delete( easy_markup_table( 'comments' ), array( 'id' => $id ) );
 }
@@ -336,6 +350,7 @@ function easy_markup_comment_out( object $r ): array {
 		'block_type'  => (string) $r->block_type,
 		'where'       => easy_markup_where_label( $r ),
 		'quote'       => (string) $r->quote,
+		'snapshot'    => easy_markup_snapshot_url( $r ),
 		'body'        => (string) $r->body,
 		'author'      => (string) $r->author,
 		'guest'       => (bool) $r->link_id,

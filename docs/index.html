@@ -95,7 +95,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
 <div class="wrap">
   <nav class="toc" aria-label="Sections">
     <p class="name">Easy Markup</p>
-    <p class="ver">WordPress plugin · v1.4.1</p>
+    <p class="ver">WordPress plugin · v1.5.0</p>
     <ol>
       <li><a href="#on-the-page">Comment on a page</a></li>
       <li><a href="#in-the-editor">Comment in the editor</a></li>
@@ -132,6 +132,7 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
           <li>Click a block, or Tab to it and press Enter. The box shows which block you picked.</li>
           <li>Type the comment and click <span class="ui">Send</span>. Click a name under the box to mention a teammate; they get an email.</li>
           <li>For a note about the page as a whole, click <span class="ui">Whole page</span>.</li>
+          <li>A picture of the page, with your block outlined, is saved with the comment, so editors see what you saw even after the page changes.</li>
           <li>Click <span class="ui">Done commenting</span> to use links and buttons on the page again.</li>
         </ol>
         <div class="note"><p>You can also start from the admin bar: <span class="ui">Markup</span> &gt; <span class="ui">Comment on this page</span>.</p></div>
@@ -206,6 +207,8 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
       <h3>Guest comment emails</h3>
       <p>Tick <span class="ui">Send an email when a guest comments</span> and list who should get them, one address per line or separated by commas (up to 20). Each comment left through a review link then emails everyone on the list with the page, the block and its first words, the comment, the guest's name, which review link they used, and links to the comment and to the full list.</p>
       <p>Comments from editors and admins don't send these; they mention each other instead. Entries that aren't email addresses are left out with a message, and the switch stays off until the list has at least one address.</p>
+      <h3>Page snapshots</h3>
+      <p>On by default. Each comment left on the page saves a picture of the whole page as it looked, with the commented block framed. Snapshots show as thumbnails in the editor sidebar and the Markup list, and in View on page. Only people who can edit the page can open them; a guest email links to the snapshot behind a sign-in. Comments added in the editor sidebar have no snapshot. Turn it off with <span class="ui">Save a picture of the page with each comment left on it</span>.</p>
       <h3>Colors</h3>
       <p>Match comment mode to your site. Clear a color to go back to the default.</p>
       <div class="table-wrap">
@@ -285,6 +288,8 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
         <dd>The comment stays in the list with the block's type and first words. View on page tells you the block is no longer there.</dd>
         <dt>Who gets emails?</dt>
         <dd>People mentioned by handle in a staff comment (a handle is the part of their email address before the at sign), and, if guest comment emails are on, the addresses in Settings for each guest comment.</dd>
+        <dt>Where are snapshots kept, and who can see them?</dt>
+        <dd>In <code>wp-content/uploads/easy-markup-snapshots</code>, under random names, re-saved as JPEG at most 1600px wide. They're never linked directly: editors open them through a signed-in link that checks they can edit the page. Deleting a comment deletes its snapshot. Some things can look a little different in a snapshot than on screen, such as images from other sites, embeds and some web fonts.</dd>
         <dt>Do visitors see anything?</dt>
         <dd>No. Pages look the same to visitors; the Comment button and block attributes only appear for people who can comment.</dd>
       </dl>

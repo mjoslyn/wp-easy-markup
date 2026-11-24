@@ -114,6 +114,7 @@ add_action(
 		) . '</p>'
 			. '<p style="color:#50575e;border-left:3px solid #2271b1;padding-left:8px">' . esc_html( easy_markup_where_label( $row ) ) . '</p>'
 			. '<p>' . nl2br( esc_html( $row->body ) ) . '</p>'
+			. ( '' !== (string) $row->snapshot ? '<p><a href="' . esc_url( easy_markup_snapshot_url( $row ) ) . '">' . esc_html__( 'See the snapshot of the page (sign-in needed)', 'easy-markup' ) . '</a></p>' : '' )
 			. '<p><a href="' . esc_url( $show ) . '">' . esc_html__( 'See it on the page', 'easy-markup' ) . '</a> · <a href="' . esc_url( $list ) . '">' . esc_html__( 'All comments on this page', 'easy-markup' ) . '</a></p>';
 		wp_mail(
 			$settings['emails'],
