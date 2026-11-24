@@ -1,0 +1,86 @@
+# On every push to main: lint (WPCS + php -l), build the plugin zip, and cut a GitHub release for the
+# version in the plugin header if that version has no release yet. Any lint finding (error or warning)
+# fails the run, and nothing is built or released. Bump "Version:" in easy-markup.php
+# and EASY_MARKUP_VERSION together to release; other pushes are linted and built only.
+name: Lint, build, release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: PHP syntax
+        run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Install PHPCS and WPCS
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: WordPress Coding Standards
+        # Errors and warnings both fail (the run stops here; build and release need this job).
+        run: vendor/bin/phpcs --runtime-set ignore_warnings_on_exit 0 --runtime-set ignore_errors_on_exit 0
+
+  release:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read the version
+        id: version
+        run: |
+          header=$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*//p' easy-markup.php | head -1 | tr -d '[:space:]')
+          constant=$(sed -n "s/^const EASY_MARKUP_VERSION[[:space:]]*=[[:space:]]*'\(.*\)';/\1/p" easy-markup.php)
+          if [ -z "$header" ] || [ "$header" != "$constant" ]; then
+            echo "::error file=easy-markup.php::Version header ($header) and EASY_MARKUP_VERSION ($constant) must match."
+            exit 1
+          fi
+          echo "version=$header" >> "$GITHUB_OUTPUT"
+          echo "tag=v$header" >> "$GITHUB_OUTPUT"
+
+      - name: Build the zip
+        run: |
+          git archive --format=zip --prefix=easy-markup/ -o easy-markup.zip HEAD
+          unzip -l easy-markup.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easy-markup-${{ steps.version.outputs.version }}
+          path: easy-markup.zip
+
+      - name: Release (only for a new version)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to release. Bump the version to cut a new one."
+            exit 0
+          fi
+          gh release create "$TAG" easy-markup.zip \
+            --target "$GITHUB_SHA" \
+            --title "Easy Markup ${TAG#v}" \
+            --generate-notes
