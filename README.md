@@ -2,6 +2,8 @@
 
 Comment on a WordPress page, or on any block in it, right on the page. Editors and admins comment as themselves; anyone you send a review link to can comment after giving their name. Comments are listed in the block editor's Comments sidebar and on an admin page, where you resolve, reopen or delete them.
 
+**Docs:** [mjoslyn.github.io/wp-easy-markup](https://mjoslyn.github.io/wp-easy-markup/), with captioned screencasts. The source is in [`docs/`](docs/index.html).
+
 ## How it works
 
 - **Comment mode on the page.** A Comment button (bottom right) turns comment mode on. The block under the pointer is outlined; click it, or Tab to it and press Enter, to comment on it. "Whole page" comments on the page itself. In comment mode a click comments instead of following a link.
