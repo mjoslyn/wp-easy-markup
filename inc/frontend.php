@@ -33,6 +33,7 @@ add_action(
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		wp_enqueue_style( 'easy-markup', EASY_MARKUP_URL . 'assets/markup.css', array(), EASY_MARKUP_VERSION );
+		wp_add_inline_style( 'easy-markup', easy_markup_colors_css() );
 		wp_enqueue_script(
 			'easy-markup',
 			EASY_MARKUP_URL . 'assets/markup.js',

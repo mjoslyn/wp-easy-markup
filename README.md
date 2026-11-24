@@ -11,6 +11,7 @@ Comment on a WordPress page, or on any block in it, right on the page. Editors a
 - **Comments sidebar** (block editor): the page's comments, open ones first. Show selects the block a comment is on; Resolve, Reopen and Delete; add a comment on the selected block or the whole page; make, copy and turn off review links.
 - **Markup** (admin menu, with the number of open comments): every comment, filtered by page and by open or resolved, with View on page (scrolls to the block, outlines it and shows the comment) and Edit page.
 - **Admin bar** on a page: Markup (open count), Comment on this page, See comments.
+- **Colors** (Settings > Easy Markup): the accent (outlines, the active Comment button, quote bars, focus rings), the button color and the button text color, with WordPress's color picker. Clear a color to go back to the default. Applied as CSS custom properties (`--em-accent`, `--em-button`, `--em-button-text`), so a theme can also set them.
 
 ### Which block a comment is on
 
