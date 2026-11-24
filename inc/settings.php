@@ -73,6 +73,15 @@ add_action(
 				'default'           => array(),
 			)
 		);
+		register_setting(
+			'easy_markup',
+			'easy_markup_notify',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => 'easy_markup_sanitize_notify',
+				'default'           => array(),
+			)
+		);
 	}
 );
 
@@ -124,9 +133,10 @@ function easy_markup_settings_page(): void {
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Easy Markup', 'easy-markup' ); ?></h1>
-		<p><?php esc_html_e( 'Colors of comment mode on your pages. Clear a color to go back to the default.', 'easy-markup' ); ?></p>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'easy_markup' ); ?>
+			<h2><?php esc_html_e( 'Colors', 'easy-markup' ); ?></h2>
+			<p><?php esc_html_e( 'Colors of comment mode on your pages. Clear a color to go back to the default.', 'easy-markup' ); ?></p>
 			<table class="form-table" role="presentation">
 				<?php foreach ( $fields as $key => $field ) : ?>
 					<tr>
@@ -137,6 +147,32 @@ function easy_markup_settings_page(): void {
 						</td>
 					</tr>
 				<?php endforeach; ?>
+			</table>
+			<?php $notify = easy_markup_notify_settings(); ?>
+			<h2><?php esc_html_e( 'Guest comment emails', 'easy-markup' ); ?></h2>
+			<p><?php esc_html_e( 'Get an email each time someone comments through a review link. Comments from editors and admins don\'t send these; they can mention each other instead.', 'easy-markup' ); ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Email on guest comments', 'easy-markup' ); ?></th>
+					<td>
+						<label for="easy-markup-notify-guests">
+							<input type="checkbox" id="easy-markup-notify-guests" name="easy_markup_notify[guests]" value="1" <?php checked( $notify['guests'] ); ?>>
+							<?php esc_html_e( 'Send an email when a guest comments', 'easy-markup' ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="easy-markup-notify-emails"><?php esc_html_e( 'Send to', 'easy-markup' ); ?></label></th>
+					<td>
+						<textarea id="easy-markup-notify-emails" name="easy_markup_notify[emails]" rows="3" class="large-text code" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>"><?php echo esc_textarea( implode( "\n", $notify['emails'] ) ); ?></textarea>
+						<p class="description">
+							<?php
+							/* translators: %d: the most addresses. */
+							echo esc_html( sprintf( __( 'One address per line, or separated by commas. Up to %d.', 'easy-markup' ), EASY_MARKUP_NOTIFY_MAX ) );
+							?>
+						</p>
+					</td>
+				</tr>
 			</table>
 			<?php submit_button(); ?>
 		</form>
