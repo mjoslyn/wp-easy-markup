@@ -15,8 +15,21 @@ add_action(
 		$open  = easy_markup_open_count();
 		$title = 'Markup' . ( $open ? ' <span class="awaiting-mod">' . (int) $open . '</span>' : '' );
 		add_menu_page( 'Markup', $title, 'edit_pages', 'easy-markup', 'easy_markup_admin_page', 'dashicons-format-chat', 26 );
-		// First submenu item names the list itself; Settings (inc/settings.php) follows it.
-		add_submenu_page( 'easy-markup', 'Markup', __( 'Comments', 'easy-markup' ), 'edit_pages', 'easy-markup', 'easy_markup_admin_page' );
+		// Submenu: Comments (the list itself), Review links, then Settings (inc/settings.php).
+		add_submenu_page( 'easy-markup', __( 'Markup comments', 'easy-markup' ), __( 'Comments', 'easy-markup' ), 'edit_pages', 'easy-markup', 'easy_markup_admin_page' );
+		add_submenu_page( 'easy-markup', __( 'Review links', 'easy-markup' ), __( 'Review links', 'easy-markup' ), 'edit_pages', 'easy-markup-links', 'easy_markup_links_page' );
+	}
+);
+
+// Review links used to be a tab (?page=easy-markup&tab=links); send those addresses to its own page.
+add_action(
+	'admin_init',
+	function () {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only reads which page was asked for.
+		if ( isset( $_GET['page'], $_GET['tab'] ) && 'easy-markup' === $_GET['page'] && 'links' === $_GET['tab'] ) {
+			wp_safe_redirect( easy_markup_admin_url( 'links' ) );
+			exit;
+		}
 	}
 );
 
@@ -67,53 +80,49 @@ add_action(
 );
 
 /**
- * The address of a tab on the Markup admin page.
+ * The address of a Markup admin page.
  *
- * @param string $tab 'comments' or 'links'.
+ * @param string $which 'comments' or 'links'.
  * @return string
  */
-function easy_markup_admin_url( string $tab = 'comments' ): string {
-	return 'links' === $tab ? admin_url( 'admin.php?page=easy-markup&tab=links' ) : admin_url( 'admin.php?page=easy-markup' );
+function easy_markup_admin_url( string $which = 'comments' ): string {
+	return 'links' === $which ? admin_url( 'admin.php?page=easy-markup-links' ) : admin_url( 'admin.php?page=easy-markup' );
 }
 
 /**
- * The Markup admin page: a Comments tab and a Review links tab.
+ * Markup > Comments.
  *
  * @return void
  */
 function easy_markup_admin_page(): void {
-	// Which tab to show; read-only, so no nonce.
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	$tab  = isset( $_GET['tab'] ) && 'links' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ? 'links' : 'comments';
-	$tabs = array(
-		'comments' => __( 'Comments', 'easy-markup' ),
-		'links'    => __( 'Review links', 'easy-markup' ),
-	);
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Markup', 'easy-markup' ); ?></h1>
-		<nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'Markup sections', 'easy-markup' ); ?>">
-			<?php foreach ( $tabs as $key => $label ) : ?>
-				<a href="<?php echo esc_url( easy_markup_admin_url( $key ) ); ?>" class="nav-tab<?php echo $key === $tab ? ' nav-tab-active' : ''; ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?></a>
-			<?php endforeach; ?>
-		</nav>
-		<?php
-		if ( 'links' === $tab ) {
-			easy_markup_admin_links_tab();
-		} else {
-			easy_markup_admin_comments_tab();
-		}
-		?>
+		<h1><?php esc_html_e( 'Markup comments', 'easy-markup' ); ?></h1>
+		<?php easy_markup_admin_comments_tab(); ?>
 	</div>
 	<script>
-	// Old bookmarks to the Review links section open its tab.
-	if ( location.hash === '#review-links' && ! /[?&]tab=links/.test( location.search ) ) { location.replace( <?php echo wp_json_encode( easy_markup_admin_url( 'links' ) ); ?> ); }
+	// Old bookmarks to the Review links section open its page.
+	if ( location.hash === '#review-links' ) { location.replace( <?php echo wp_json_encode( easy_markup_admin_url( 'links' ) ); ?> ); }
 	</script>
 	<?php
 }
 
 /**
- * The Comments tab: every comment the user can edit, filtered by page and status.
+ * Markup > Review links.
+ *
+ * @return void
+ */
+function easy_markup_links_page(): void {
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Review links', 'easy-markup' ); ?></h1>
+		<?php easy_markup_admin_links_tab(); ?>
+	</div>
+	<?php
+}
+
+/**
+ * The comment list: every comment the user can edit, filtered by page and status.
  *
  * @return void
  */
@@ -189,7 +198,7 @@ function easy_markup_admin_comments_tab(): void {
 }
 
 /**
- * The Review links tab: make a whole-site link, and see or turn off every link the user can manage.
+ * The review links list: make a whole-site link, and see or turn off every link the user can manage.
  *
  * @return void
  */
