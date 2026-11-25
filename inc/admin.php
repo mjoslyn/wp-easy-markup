@@ -61,17 +61,63 @@ add_action(
 			}
 			easy_markup_revoke_link( (int) $link->id );
 		}
-		wp_safe_redirect( admin_url( 'admin.php?page=easy-markup#review-links' ) );
+		wp_safe_redirect( easy_markup_admin_url( 'links' ) );
 		exit;
 	}
 );
 
 /**
- * The Markup admin page.
+ * The address of a tab on the Markup admin page.
+ *
+ * @param string $tab 'comments' or 'links'.
+ * @return string
+ */
+function easy_markup_admin_url( string $tab = 'comments' ): string {
+	return 'links' === $tab ? admin_url( 'admin.php?page=easy-markup&tab=links' ) : admin_url( 'admin.php?page=easy-markup' );
+}
+
+/**
+ * The Markup admin page: a Comments tab and a Review links tab.
  *
  * @return void
  */
 function easy_markup_admin_page(): void {
+	// Which tab to show; read-only, so no nonce.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$tab  = isset( $_GET['tab'] ) && 'links' === sanitize_key( wp_unslash( $_GET['tab'] ) ) ? 'links' : 'comments';
+	$tabs = array(
+		'comments' => __( 'Comments', 'easy-markup' ),
+		'links'    => __( 'Review links', 'easy-markup' ),
+	);
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Markup', 'easy-markup' ); ?></h1>
+		<nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e( 'Markup sections', 'easy-markup' ); ?>">
+			<?php foreach ( $tabs as $key => $label ) : ?>
+				<a href="<?php echo esc_url( easy_markup_admin_url( $key ) ); ?>" class="nav-tab<?php echo $key === $tab ? ' nav-tab-active' : ''; ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?></a>
+			<?php endforeach; ?>
+		</nav>
+		<?php
+		if ( 'links' === $tab ) {
+			easy_markup_admin_links_tab();
+		} else {
+			easy_markup_admin_comments_tab();
+		}
+		?>
+	</div>
+	<script>
+	// Old bookmarks to the Review links section open its tab.
+	if ( location.hash === '#review-links' && ! /[?&]tab=links/.test( location.search ) ) { location.replace( <?php echo wp_json_encode( easy_markup_admin_url( 'links' ) ); ?> ); }
+	</script>
+	<?php
+}
+
+/**
+ * The Comments tab: every comment the user can edit, filtered by page and status.
+ *
+ * @return void
+ */
+function easy_markup_admin_comments_tab(): void {
 	// Read-only filters for a list (no change is made), so no nonce.
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended
 	$post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
@@ -87,9 +133,7 @@ function easy_markup_admin_page(): void {
 	$pages  = easy_markup_pages_with_comments();
 	$base   = admin_url( 'admin.php?page=easy-markup' );
 	?>
-	<div class="wrap">
-		<h1>Markup</h1>
-		<p>Comments left on pages and their blocks, by editors and by guests with a review link. Turn on comment mode from the admin bar on any page (Markup &gt; Comment on this page), or use the Comments sidebar in the editor. Make review links there too.</p>
+		<p>Comments left on pages and their blocks, by editors and by guests with a review link. Turn on comment mode from the admin bar on any page (Markup &gt; Comment on this page), or use the Comments sidebar in the editor.</p>
 		<form method="get" style="margin:12px 0">
 			<input type="hidden" name="page" value="easy-markup">
 			<label>Page
@@ -141,8 +185,16 @@ function easy_markup_admin_page(): void {
 				</tbody>
 			</table>
 		<?php endif; ?>
+	<?php
+}
 
-		<h2 id="review-links"><?php esc_html_e( 'Review links', 'easy-markup' ); ?></h2>
+/**
+ * The Review links tab: make a whole-site link, and see or turn off every link the user can manage.
+ *
+ * @return void
+ */
+function easy_markup_admin_links_tab(): void {
+	?>
 		<p><?php esc_html_e( 'Anyone with a review link can comment after giving their name. A page link works on its page; a whole-site link works on every published page. Make page links in the editor\'s Comments sidebar.', 'easy-markup' ); ?></p>
 		<?php if ( current_user_can( EASY_MARKUP_SITE_CAP ) ) : ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:12px 0">
@@ -212,6 +264,5 @@ function easy_markup_admin_page(): void {
 				</tbody>
 			</table>
 		<?php endif; ?>
-	</div>
 	<?php
 }
